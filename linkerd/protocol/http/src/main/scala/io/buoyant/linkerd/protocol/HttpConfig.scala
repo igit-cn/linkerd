@@ -18,10 +18,11 @@ import com.twitter.finagle.stack.nilStack
 import com.twitter.finagle.tracing.TraceInitializerFilter
 import com.twitter.finagle.{ServiceFactory, Stack}
 import com.twitter.logging.Policy
+import io.buoyant.config.ConflictingStreamingOptions
 import io.buoyant.linkerd.protocol.HttpRequestAuthorizerConfig.param
 import io.buoyant.linkerd.protocol.http._
 import io.buoyant.router.{ClassifiedRetries, Http, RoutingFactory}
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import io.buoyant.router.http._
 import io.buoyant.router.HttpInstances._
 
@@ -228,7 +229,10 @@ case class HttpConfig(
   var service: Option[HttpSvc] = None
 
   private val streaming = streamingEnabled -> streamAfterContentLengthKB match {
-    case (Some(true), None) => hparam.Streaming(true)
+    case (Some(true), None) => hparam.Streaming(5.kilobytes)
+    case (None, None) => hparam.Streaming(5.kilobytes)
+    case (Some(false), None) => hparam.Streaming(false)
+    case (Some(false), Some(_)) => throw ConflictingStreamingOptions(label)
     case (_, Some(streamAfter)) => hparam.Streaming(streamAfter.kilobytes)
     case _ => hparam.Streaming(false)
   }
@@ -263,6 +267,7 @@ case class HttpConfig(
     .maybeWith(httpAccessLogAppend.map(AccessLogger.param.Append.apply))
     .maybeWith(httpAccessLogRotateCount.map(AccessLogger.param.RotateCount.apply))
     .maybeWith(maxHeadersKB.map(kb => hparam.MaxHeaderSize(kb.kilobytes)))
+    .maybeWith(maxInitialLineKB.map(kb => hparam.MaxInitialLineSize(kb.kilobytes)))
     .maybeWith(streamAfterContentLengthKB.map(kb => hparam.FixedLengthStreamedAfter(kb.kilobytes)))
     .maybeWith(Some(streaming))
     .maybeWith(Some(hparam.MaxRequestSize(MaxReqRespSize)))

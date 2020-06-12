@@ -1,3 +1,58 @@
+## 1.7.4 2020-05-28
+Linkerd 1.7.4 includes two fixes contributed by the open source community,
+which is so greatly appreciated. The first fix enables Linkerd to properly
+use `dtab` paths which include `#` symbols used by ZooKeeper serverset shard
+syntax.
+
+The second fix sets `MaxInitialLineSize` value for the HttpConfig from
+`maxInitialSizeKB` parameter in the `router` configuration for Linkerd.
+Among other things, this ensures that Linkerd can properly handle URLs that
+are very long. 
+
+## 1.7.3 2020-05-19
+Linkerd 1.7.3 is a maintenance release that upgrades finagle to 20.4.1 and
+netty to 4.1.47-Final. The node and eslint dependencies required by the Admin
+UI are also upgraded to 14.2.0 and 6.8.0, respectively. 
+
+* Upgrade to finagle 20.4.1 and Netty 4.1.47-Final [#2386](https://github.com/linkerd/linkerd/pull/2386)
+* Upgrade to Node 14.2.0 and eslint 6.8.0 [#2389](https://github.com/linkerd/linkerd/pull/2389)
+
+## 1.7.2 2020-03-30
+Linkerd 1.7.2 is a point release which addresses gRPC responses which have no
+bodies, but do have trailers. With this change in place, Linkerd will 
+return a failed Future containing a Non-Ok GrpcStatus instance when handling
+empty gRPC responses with EOS trailers.
+
+* gRPC
+  * Fix grpc handling of trailers-only h2 responses [#2379](https://github.com/linkerd/linkerd/pull/2379)
+
+Our gratitude goes out to [jlawrienyt](https://github.com/jlawrienyt) for 
+finding and fixing this issue.
+
+## 1.7.1 2019-12-18
+Linkerd 1.7.1 adds a parameter named `initialStreamWindowSizeKB` to 
+MeshInterpreterInitializer.scala. This parameter is used to configure the 
+[initial flow-control window size](https://http2.github.io/http2-spec/#InitialWindowSize)
+that the H2 client in the `io.l5d.mesh` interpreter sends to the H2 server. 
+
+Parameter Name | Default Value | Description
+-----------------|---------------|-------------
+`initialStreamWindowSizeKB` | 1024 (1 MB) | Sets the [initial flow-control window size](https://http2.github.io/http2-spec/#InitialWindowSize) for the H2 client used by the intepreter
+
+This release is brought to you with fixes from these contributors. Thank you 
+all SO much for being a part of the community!
+[Robert Panzer](https://github.com/robertpanzer)
+[Robert Macaulay](https://github.com/taer)
+
+Full release notes:
+* HTTP/1.1
+  * Adds configuration server.serverSession to allow expiring server connections [#2353](https://github.com/linkerd/linkerd/pull/2353)
+  * Ensures that the `streamingEnabled` router parameter is handled properly [#2332](https://github.com/linkerd/linkerd/pull/2332)
+* HTTP/2
+  * Adds functionality to respect `maxConcurrentStreams` for server dispatchers [#2327](https://github.com/linkerd/linkerd/pull/2327)  
+* Linkerd Mesh Interpreter
+  * Add the `initialStreamWindowSizeKB` parameter to the `io.l5d.mesh` interpreter. [#2364](https://github.com/linkerd/linkerd/pull/2364)
+  
 ## 1.7.0 2019-08-27
 Linkerd 1.7.0 includes a number of memory leak fixes for Linkerd and its
 underlying `grpc-runtime` module. This release includes improvements for
@@ -672,7 +727,7 @@ We’ve made some internal changes to keep up with the latest and greatest:
     interfaces.
 * HTTP/2
   * Reset h2 remote streams that continue to send frames after the local stream
-    has been interrupted.  This fixes a bug that occationally caused the
+    has been interrupted.  This fixes a bug that occasionally caused the
     io.l5d.mesh interpreter to hang.
   * Add support for HTTP/2 tracing.
 * Kubernetes
@@ -828,7 +883,7 @@ We’ve made some internal changes to keep up with the latest and greatest:
   generation of gRPC clients and servers for Finagle.
 * Various bug fixes to the Linkerd admin dashboard.
 * The default docker images now use a 64 bit JVM.  A `-32b` docker image is
-  also availble but does not support the boringssl TLS extensions required for
+  also available but does not support the boringssl TLS extensions required for
   ALPN, etc.
 * Marathon:
   * Support "ip per task" feature
